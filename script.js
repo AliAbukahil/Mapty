@@ -95,8 +95,14 @@ class App {
   #workouts = [];
 
   constructor() {
-    this.workout = [];
+    // this.workout = [];
+    // Get user's position
     this._getPosition();
+
+    // Get Data from Local storage
+    this._getLocalStorage();
+
+    // Attach event handlers
     form.addEventListener("submit", this._newWorkout.bind(this));
     inputType.addEventListener("change", this._toggleElevationField);
     containerWorkouts.addEventListener("click", this._moveToPopup.bind(this));
@@ -119,9 +125,7 @@ class App {
 
     const coords = [latitude, longitude];
 
-    // console.log(this);
     this.#map = L.map("map").setView(coords, this.#mapZoomLevel);
-    //   console.log(map);
 
     L.tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png", {
       attribution:
@@ -130,6 +134,10 @@ class App {
 
     // Handling clicks on map
     this.#map.on("click", this._showForm.bind(this));
+
+    this.#workouts.forEach((work) => {
+      this._renderWoroutMarker(work);
+    });
   }
 
   _showForm(mapE) {
@@ -208,7 +216,6 @@ class App {
 
     // Add new object to workout array
     this.#workouts.push(workout);
-    console.log(workout);
 
     // Render workout on map as a marker
     this._renderWoroutMarker(workout);
@@ -218,6 +225,9 @@ class App {
 
     // Hide the form + clear Input fields
     this._hideForm();
+
+    // Set local storage to all workouts
+    this._setLocalStorage();
   }
 
   _renderWoroutMarker(workout) {
@@ -297,7 +307,6 @@ class App {
     const workout = this.#workouts.find(
       (work) => work.id === workoutEl.dataset.id
     );
-    console.log(workout);
 
     this.#map.setView(workout.coords, this.#mapZoomLevel, {
       animate: true,
@@ -307,7 +316,31 @@ class App {
     });
 
     // using the Public interface
-    workout.click();
+    // workout.click();
+  }
+
+  _setLocalStorage() {
+    // JSON.stringify() converts any object in JavaScript to a string
+    localStorage.setItem("workouts", JSON.stringify(this.#workouts));
+  }
+
+  _getLocalStorage() {
+    // JSON.parse() converts string in JavaScript to an object
+    const data = JSON.parse(localStorage.getItem("workouts"));
+    // console.log(data);
+
+    if (!data) return;
+
+    this.#workouts = data;
+
+    this.#workouts.forEach((work) => {
+      this._renderWorkout(work);
+    });
+  }
+
+  reset() {
+    localStorage.removeItem("workouts");
+    location.reload();
   }
 }
 
